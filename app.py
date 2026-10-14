@@ -24,11 +24,24 @@ from flask import Flask, request, jsonify, render_template_string, send_from_dir
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STARTUPS_MODEL_PATH = os.path.join(BASE_DIR, "startup_profit_pipeline.joblib")
-BOSTON_MODEL_PATH = os.path.join(BASE_DIR, "boston_housing_pipeline.joblib")
 
-startups_pipeline = joblib.load(STARTUPS_MODEL_PATH) if os.path.exists(STARTUPS_MODEL_PATH) else None
-boston_pipeline = joblib.load(BOSTON_MODEL_PATH) if os.path.exists(BOSTON_MODEL_PATH) else None
+def _find_model(filename):
+    candidates = [
+        os.path.join(BASE_DIR, filename),
+        os.path.join(os.getcwd(), filename),
+        os.path.join(os.path.dirname(BASE_DIR), filename),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", filename)
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return None
+
+startups_path = _find_model("startup_profit_pipeline.joblib")
+boston_path = _find_model("boston_housing_pipeline.joblib")
+
+startups_pipeline = joblib.load(startups_path) if startups_path else None
+boston_pipeline = joblib.load(boston_path) if boston_path else None
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">

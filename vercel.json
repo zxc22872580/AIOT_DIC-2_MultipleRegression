@@ -8,12 +8,7 @@
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": [
-        "*.joblib",
-        "*.png",
-        "*.csv",
-        "app.py"
-      ]
+      "includeFiles": "*.joblib"
     }
   }
 }
