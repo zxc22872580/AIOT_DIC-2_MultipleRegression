@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ],
+  "functions": {
+    "api/index.py": {
+      "includeFiles": [
+        "*.joblib",
+        "*.png",
+        "*.csv",
+        "app.py"
+      ]
+    }
+  }
+}
