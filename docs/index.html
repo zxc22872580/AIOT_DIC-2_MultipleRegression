@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Multiple Regression Explorer</title>
+<meta name="description" content="Run multiple linear regression and five feature-selection algorithms on any CSV, entirely in the browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="i-home"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></g>
+<g id="i-chev-r"><path d="m9 5 7 7-7 7"/></g>
+<g id="i-chev-d"><path d="m5 9 7 7 7-7"/></g>
+<g id="i-chart"><path d="M3 3v18h18"/><path d="m6 15 4-5 4 3 5-7"/></g>
+<g id="i-ext"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></g>
+<g id="i-sliders"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></g>
+<g id="i-list"><path d="M4 6h1M4 12h1M4 18h1M9 6h11M9 12h11M9 18h11"/></g>
+<g id="i-filter"><path d="M3 5h18l-7 8v6l-4-2v-4Z"/></g>
+<g id="i-trend"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></g>
+<g id="i-scissors"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8 8l12 10M20 6 8 16"/></g>
+<g id="i-net"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><circle cx="12" cy="5" r="2"/><path d="M11 7 6 17M13 7l5 10M7 19h10"/></g>
+<g id="i-search"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></g>
+<g id="i-layers"><path d="m12 3 9 5-9 5-9-5Z"/><path d="m3 13 9 5 9-5"/></g>
+<g id="i-check2"><path d="m3 13 4 4L15 9"/><path d="m11 13 3 3 7-8"/></g>
+<g id="i-star"><path d="m12 3.5 2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L4.4 9.8l6-.8Z"/></g>
+<g id="i-warn"><path d="M12 4 2.5 20h19Z"/><path d="M12 10v4M12 17h.01"/></g>
+<g id="i-info"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></g>
+<g id="i-award"><circle cx="12" cy="9" r="5.5"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></g>
+<g id="i-scale"><path d="M12 4v16M5 8h14"/><path d="M5 8 2.5 14h5ZM19 8l-2.5 6h5Z"/><path d="M8 20h8"/></g>
+<g id="i-calc"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M12 12h2M16 12h.01M8 16h2M12 16h2M16 16h.01"/></g>
+<g id="i-table"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></g>
+<g id="i-db"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></g>
+<g id="i-bolt"><path d="M13 3 5 14h6l-1 7 8-11h-6Z"/></g>
+<g id="i-upload"><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/><path d="M12 4v11M8 8l4-4 4 4"/></g>
+<g id="i-link"><path d="M10 13a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 11a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></g>
+<g id="i-clip"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2"/><path d="M9 12h6M9 16h4"/></g>
+<g id="i-theme"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></g>
+<g id="i-sqrt"><path d="M3 13h3l3 7 5-17h8"/></g>
+<g id="i-target"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></g>
+<g id="i-split"><path d="M4 12h5M15 12h5"/><rect x="2" y="8" width="4" height="8" rx="1"/><rect x="18" y="8" width="4" height="8" rx="1"/><path d="M11 9v6"/></g>
+<g id="i-refresh"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/></g>
+</defs></svg>
+
+<header class="top-header">
+  <div class="header-inner">
+    <div>
+      <div class="breadcrumbs">
+        <a href="#top"><svg class="ic"><use href="#i-home"/></svg> Home</a>
+        <svg class="ic" style="font-size:10px"><use href="#i-chev-r"/></svg>
+        <a href="#controls">Regression Analysis</a>
+        <svg class="ic" style="font-size:10px"><use href="#i-chev-r"/></svg>
+        <span class="here" id="crumbDataset">50 Startups Feature Progression</span>
+      </div>
+      <h1>
+        <svg class="ic" style="color:var(--accent)"><use href="#i-chart"/></svg>
+        Multiple Linear Regression Explorer
+        <span class="brand-badge">CRISP-DM</span>
+      </h1>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="themeToggle" class="ghost-btn" aria-label="Switch colour theme">
+        <svg class="ic"><use href="#i-theme"/></svg> Theme
+      </button>
+      <a class="ghost-btn" href="https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/" target="_blank" rel="noopener">
+        <svg class="ic"><use href="#i-ext"/></svg> Reference build
+      </a>
+    </div>
+  </div>
+</header>
+
+<div class="container" id="top">
+
+  <!-- ===================== Hero ===================== -->
+  <section class="hero-card">
+    <h2>Feature Selection &amp; Parsimony Analysis</h2>
+    <p id="heroText">
+      Compare five feature-selection algorithms — <strong>Lasso</strong>, <strong>Forward SFS</strong>,
+      <strong>RFE</strong>, <strong>ElasticNet</strong> and <strong>Exhaustive best-subset</strong> —
+      against the full OLS model, and watch the bias-variance tradeoff as the predictor count grows.
+      Every model is fitted in your browser, so you can point it at any CSV and get the same treatment.
+    </p>
+    <div class="hero-tags" id="heroTags"></div>
+  </section>
+
+  <!-- ===================== Dataset source ===================== -->
+  <section class="card" id="dataSource">
+    <div class="card-header">
+      <div>
+        <h3><svg class="ic" style="color:var(--accent)"><use href="#i-db"/></svg> Dataset</h3>
+        <div class="card-subtitle">Load one of the built-in sets, or bring your own CSV by URL, file or paste.</div>
+      </div>
+      <span class="badge-tag badge-blue"><svg class="ic"><use href="#i-bolt"/></svg> Runs client-side</span>
+    </div>
+
+    <div class="source-grid">
+      <div>
+        <span class="section-label"><svg class="ic"><use href="#i-star"/></svg> Built-in datasets</span>
+        <div class="preset-row" id="presetRow"></div>
+
+        <span class="section-label"><svg class="ic"><use href="#i-upload"/></svg> Your own dataset</span>
+        <div class="tab-row" id="sourceTabs" style="margin-top:10px">
+          <button type="button" data-pane="url" class="active"><svg class="ic"><use href="#i-link"/></svg> From URL</button>
+          <button type="button" data-pane="file"><svg class="ic"><use href="#i-upload"/></svg> Upload file</button>
+          <button type="button" data-pane="paste"><svg class="ic"><use href="#i-clip"/></svg> Paste CSV</button>
+        </div>
+
+        <div id="pane-url">
+          <div class="field">
+            <label for="csvUrl">CSV URL</label>
+            <input type="url" id="csvUrl" class="input-field" spellcheck="false"
+                   value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv">
+          </div>
+          <div class="btn-row">
+            <button type="button" class="primary-btn" id="loadUrlBtn">
+              <svg class="ic"><use href="#i-link"/></svg> Load &amp; analyse
+            </button>
+            <span class="url-hint" id="urlHint">
+              The host must allow cross-origin reads. <code>raw.githubusercontent.com</code> does.
+            </span>
+          </div>
+        </div>
+
+        <div id="pane-file" hidden>
+          <div class="drop-zone" id="dropZone" tabindex="0" role="button">
+            <svg class="ic" style="font-size:22px;display:block;margin:0 auto 8px"><use href="#i-upload"/></svg>
+            Drop a <strong>.csv</strong> / <strong>.tsv</strong> file here, or click to choose one
+          </div>
+          <input type="file" id="fileInput" accept=".csv,.tsv,.txt,text/csv" hidden>
+        </div>
+
+        <div id="pane-paste" hidden>
+          <div class="field">
+            <label for="pasteBox">Paste delimited text (comma, semicolon or tab)</label>
+            <textarea id="pasteBox" class="input-field" spellcheck="false"
+                      placeholder="x1,x2,category,y&#10;1.2,3.4,alpha,10.5&#10;…"></textarea>
+          </div>
+          <button type="button" class="primary-btn" id="loadPasteBtn">
+            <svg class="ic"><use href="#i-clip"/></svg> Parse &amp; analyse
+          </button>
+        </div>
+
+        <div id="sourceMsg" style="margin-top:14px" hidden></div>
+      </div>
+
+      <div>
+        <span class="section-label"><svg class="ic"><use href="#i-target"/></svg> Model setup</span>
+        <div class="field" style="margin-top:10px">
+          <label for="targetSelect">Target (dependent variable)</label>
+          <select id="targetSelect" class="input-field"></select>
+        </div>
+
+        <span class="section-label" style="margin-bottom:6px"><svg class="ic"><use href="#i-list"/></svg> Candidate predictors</span>
+        <div class="schema-scroll">
+          <div class="col-list" id="colList"></div>
+        </div>
+
+        <div class="split-row">
+          <div class="field" style="margin:0">
+            <label for="testSize">Test size</label>
+            <select id="testSize" class="input-field">
+              <option value="0.1">10%</option>
+              <option value="0.2" selected>20%</option>
+              <option value="0.25">25%</option>
+              <option value="0.3">30%</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0">
+            <label for="seedInput">Split seed</label>
+            <input type="number" id="seedInput" class="input-field" value="0" min="0" max="99999" step="1">
+          </div>
+          <div class="field" style="margin:0;justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button type="button" class="primary-btn" id="refitBtn" style="width:100%;justify-content:center">
+              <svg class="ic"><use href="#i-refresh"/></svg> Refit
+            </button>
+          </div>
+        </div>
+        <div class="url-hint" style="margin-top:9px">
+          <svg class="ic"><use href="#i-split"/></svg>
+          Split matches <code>sklearn.train_test_split(test_size, random_state=seed)</code> row for row.
+          <span id="splitSummary"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Data preview ===================== -->
+  <details class="preview-details" id="previewDetails">
+    <summary>
+      <svg class="ic" style="color:var(--accent)"><use href="#i-table"/></svg>
+      Data &amp; design matrix
+      <span class="badge-tag badge-grey" id="previewBadge"></span>
+      <svg class="ic chev"><use href="#i-chev-d"/></svg>
+    </summary>
+    <div class="details-body">
+      <div class="card-subtitle" style="margin-bottom:10px">
+        Categorical columns expand to <em>k−1</em> dummy variables; the alphabetically first level is held out as the reference, so its effect sits in the intercept.
+      </div>
+      <div class="table-responsive scroll-cap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Design column</th><th>Kind</th><th>Min</th><th>Max</th><th>Mean</th><th>Std</th>
+              <th>Corr. with target</th>
+            </tr>
+          </thead>
+          <tbody id="designBody"></tbody>
+        </table>
+      </div>
+      <div class="card-subtitle" style="margin:16px 0 8px">First 10 rows as loaded</div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr id="rawHead"></tr></thead>
+          <tbody id="rawBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <!-- ===================== Controls ===================== -->
+  <section class="controls-wrapper" id="controls">
+    <span class="section-label"><svg class="ic"><use href="#i-sliders"/></svg> 1. Select feature-selection algorithm</span>
+    <div class="tabs-pills" id="algoTabs"></div>
+    <span class="section-label" style="margin-top:8px"><svg class="ic"><use href="#i-list"/></svg> 2. Number of features (k)</span>
+    <div class="k-selector-group" id="kSelectorGroup"></div>
+  </section>
+
+  <!-- ===================== Metric ribbon ===================== -->
+  <section class="metrics-grid">
+    <div class="metric-card" id="cardRMSE">
+      <div class="metric-title"><span>Test RMSE</span><span class="badge-tag badge-blue" id="rmseBadge">k</span></div>
+      <div class="metric-val" id="valRMSE">—</div>
+      <div class="metric-note" id="noteRMSE">Lower is better</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title"><span>R² score</span><span class="badge-tag badge-blue" id="r2Badge">—</span></div>
+      <div class="metric-val" id="valR2">—</div>
+      <div class="metric-note" id="noteR2">Variance explained on held-out rows</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title"><span>Adjusted R²</span><svg class="ic" style="color:var(--fg-faint)"><use href="#i-scale"/></svg></div>
+      <div class="metric-val" id="valAdjR2">—</div>
+      <div class="metric-note">Penalises redundant parameters</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title"><span>Mean absolute error</span><svg class="ic" style="color:var(--fg-faint)"><use href="#i-calc"/></svg></div>
+      <div class="metric-val" id="valMAE">—</div>
+      <div class="metric-note">Average absolute prediction error</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title"><span>F-statistic</span><span class="badge-tag badge-grey" id="fBadge">—</span></div>
+      <div class="metric-val" id="valFStat">—</div>
+      <div class="metric-note" id="noteF">Joint significance on the training fit</div>
+    </div>
+  </section>
+
+  <!-- ===================== Active predictors ===================== -->
+  <section class="predictors-strip">
+    <div class="predictors-left">
+      <span class="lead">
+        <svg class="ic" style="color:var(--accent)"><use href="#i-check2"/></svg>
+        Active predictors (<span id="featuresCount">0</span>):
+      </span>
+      <div id="featuresListChips" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+    </div>
+    <div id="parsimonyNotice" class="badge-tag badge-grey"></div>
+  </section>
+
+  <!-- ===================== Charts ===================== -->
+  <section class="dual-charts-grid">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3><svg class="ic" style="color:var(--accent)"><use href="#i-chart"/></svg> RMSE by number of features</h3>
+          <div class="card-subtitle" id="rmseChartSub">Lower is better.</div>
+        </div>
+        <span class="badge-tag badge-blue" id="rmseChartBadge">—</span>
+      </div>
+      <div class="chart-container"><canvas id="rmseChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3><svg class="ic" style="color:var(--good)"><use href="#i-trend"/></svg> R² by number of features</h3>
+          <div class="card-subtitle" id="r2ChartSub">Higher is better.</div>
+        </div>
+        <span class="badge-tag badge-green" id="r2ChartBadge">—</span>
+      </div>
+      <div class="chart-container"><canvas id="r2Chart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ===================== Equation ===================== -->
+  <section class="equation-card">
+    <div class="equation-title"><svg class="ic"><use href="#i-sqrt"/></svg> Fitted OLS regression equation</div>
+    <div class="equation-formula" id="equationBox">—</div>
+  </section>
+
+  <!-- ===================== Coefficients + calculator ===================== -->
+  <section class="calc-grid">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3><svg class="ic" style="color:var(--accent)"><use href="#i-table"/></svg> Coefficients &amp; statistical tests</h3>
+          <div class="card-subtitle">Estimates, standard errors, t-statistics, 95% intervals and VIF multicollinearity, from the training split.</div>
+        </div>
+      </div>
+      <div class="table-responsive scroll-cap">
+        <table class="data-table" id="coefTable">
+          <thead>
+            <tr>
+              <th>Predictor</th><th>Estimate (β)</th><th>Std. error</th><th>t-stat</th>
+              <th>p-value</th><th>95% conf. int.</th><th>VIF</th>
+            </tr>
+          </thead>
+          <tbody id="coefTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3><svg class="ic" style="color:var(--good)"><use href="#i-calc"/></svg> Live predictor</h3>
+          <div class="card-subtitle">Move a control to predict with the active model.</div>
+        </div>
+        <span class="badge-tag badge-green"><svg class="ic"><use href="#i-bolt"/></svg> Real-time</span>
+      </div>
+      <div id="predictorInputs" class="scroll-cap"></div>
+      <div class="prediction-output-box">
+        <div class="pred-label">Predicted <span id="predTargetName">value</span></div>
+        <div class="pred-value" id="predOutput">—</div>
+        <div class="pred-formula-note" id="predNote"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Residuals ===================== -->
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h3><svg class="ic" style="color:var(--warn)"><use href="#i-search"/></svg> Hold-out residuals &amp; outlier diagnostic</h3>
+        <div class="card-subtitle" id="outlierSub">Largest absolute residuals on rows the model never saw.</div>
+      </div>
+      <span class="badge-tag badge-blue"><svg class="ic"><use href="#i-filter"/></svg> Sorted by |residual|</span>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Rank</th><th>Row</th><th>Actual</th><th>Predicted</th>
+            <th>Residual</th><th>Abs. error</th><th>% error</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="outliersTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<footer class="page-footer">
+  <div class="footer-inner">
+    <div style="max-width:60ch">
+      <h4><svg class="ic"><use href="#i-chart"/></svg> Multiple Regression Explorer</h4>
+      <p style="margin:0;line-height:1.7">
+        A CRISP-DM study of model selection and parsimony, extended to accept any CSV.
+        OLS, Lasso and ElasticNet coordinate descent, the t and F distributions, VIF and the
+        scikit-learn-compatible train/test split are all implemented in plain JavaScript —
+        no server, no Python runtime, nothing precomputed.
+      </p>
+    </div>
+    <div style="max-width:58ch">
+      <h4 style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-faint)">
+        References &amp; acknowledgments
+      </h4>
+      <div class="ack-card">
+        <strong>Functionality &amp; layout reference:</strong>
+        <a href="https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/" target="_blank" rel="noopener">AIoT-DIC2-MultipleLR</a>
+        by Huan-Chen — the five-algorithm / k-sweep dashboard this build reproduces and extends.<br>
+        <strong>Statistical table style:</strong>
+        <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank" rel="noopener">StatsUnlock</a>.<br>
+        <strong>Datasets:</strong>
+        <a href="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv" target="_blank" rel="noopener">50 Startups</a>
+        (Avik Jain, 100-Days-Of-ML-Code) and Boston Housing.<br>
+        <strong>Methodology:</strong> CRISP-DM.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="busy-overlay" id="busyOverlay" hidden>
+  <div class="busy-card"><span class="spinner"></span><span id="busyText">Fitting models…</span></div>
+</div>
+
+<script src="assets/js/stats.js"></script>
+<script src="assets/js/regression.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

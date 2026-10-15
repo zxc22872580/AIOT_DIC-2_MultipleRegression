@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Self test</title>
+<script src="assets/js/stats.js"></script>
+<script src="assets/js/regression.js"></script>
+<script src="assets/js/data.js"></script>
+</head>
+<body>
+<pre id="out">running…</pre>
+<script>
+const lines = [];
+let fails = 0;
+function log(s) { lines.push(s); }
+function check(name, got, want, tol) {
+  const t = tol === undefined ? 1e-9 : tol;
+  let ok;
+  if (typeof want === 'number') {
+    ok = Math.abs(got - want) <= t * Math.max(1, Math.abs(want));
+  } else {
+    ok = JSON.stringify(got) === JSON.stringify(want);
+  }
+  if (!ok) { fails++; log('FAIL ' + name + '\n   got  ' + JSON.stringify(got) + '\n   want ' + JSON.stringify(want)); }
+  return ok;
+}
+
+async function fixture(name) {
+  const res = await fetch(name);
+  if (!res.ok) {
+    throw new Error(
+      'Missing fixture "' + name + '". Generate it first:\n\n' +
+      '    pip install numpy pandas scipy scikit-learn\n' +
+      '    python tools/reference_check.py\n\n' +
+      'then reload this page.'
+    );
+  }
+  return res.json();
+}
+
+async function main() {
+  const perm = await fixture('perm_truth.json');
+  const ref  = await fixture('ref2_out.json');
+
+  // ---- 1. numpy RandomState parity ----------------------------------------
+  log('--- MT19937 / numpy permutation parity ---');
+  const mt = new Stats.MT19937(0);
+  check('genrand(0)[0] == 2357136044', mt.genrandUint32(), 2357136044, 0);
+  let permOk = 0;
+  for (const key of Object.keys(perm)) {
+    const [n, seed] = key.split('_').map(Number);
+    if (check('permutation(' + n + ', seed=' + seed + ')', Stats.numpyPermutation(n, seed), perm[key])) permOk++;
+  }
+  log('permutations matching numpy: ' + permOk + '/' + Object.keys(perm).length);
+
+  const sp = Stats.trainTestSplit(50, 0.2, 0);
+  check('train_test_split test idx (50, 0.2, 0)', sp.test, ref.startups.split.testIdx);
+  check('train_test_split train idx', sp.train, ref.startups.split.trainIdx);
+  const spB = Stats.trainTestSplit(506, 0.2, 0);
+  check('boston test idx', spB.test, ref.boston.split.testIdx);
+  check('boston train idx', spB.train, ref.boston.split.trainIdx);
+
+  // ---- 2. distributions ----------------------------------------------------
+  log('--- distributions (vs scipy) ---');
+  // scipy.stats.t.sf(2.5, 10)*2, t.sf(25.542,38)*2, t.ppf(.975,38), f.sf(347.8,2,37)
+  check('t two-sided (2.5, df 10)', Stats.studentTTwoSided(2.5, 10), 0.03144684423660882, 1e-9);
+  check('t two-sided (25.542, df 38)', Stats.studentTTwoSided(25.542, 38), 1.5627973492867544e-25, 1e-6);
+  check('t.ppf(0.975, 38)', Stats.studentTInv(0.975, 38), 2.0243941639119694, 1e-9);
+  check('t.ppf(0.975, 5)', Stats.studentTInv(0.975, 5), 2.570581835636315, 1e-9);
+  check('f.sf(347.8, 2, 37)', Stats.fSf(347.8, 2, 37), 1.0272921752479704e-24, 1e-6);
+  check('f.sf(1.0, 3, 20)', Stats.fSf(1.0, 3, 20), 0.4132519140624603, 1e-9);
+  check('incompleteBeta(2,3,0.4)', Stats.incompleteBeta(2, 3, 0.4), 0.5248, 1e-6);
+
+  // ---- 3. full pipeline vs the python mirror -------------------------------
+  for (const [key, file, target] of [
+    ['startups', 'assets/data/50_Startups.csv', 'Profit'],
+    ['boston',   'assets/data/BostonHousing.csv', 'medv']
+  ]) {
+    log('--- pipeline: ' + key + ' ---');
+    const text = await (await fetch(file)).text();
+    const loaded = DataKit.load(text);
+    check(key + ' target auto-detect', loaded.target, target);
+    const design = DataKit.buildDesign(loaded.table, loaded.cols, loaded.target, loaded.features);
+    check(key + ' feature names', design.featureNames, ref[key].featureNames);
+
+    const t0 = performance.now();
+    const res = Regression.analyse(design, { testSize: 0.2, seed: 0 });
+    const ms = Math.round(performance.now() - t0);
+    log(key + ' analyse() took ' + ms + ' ms  (n=' + design.nRows + ', p=' + design.featureNames.length + ')');
+
+    check(key + ' nTrain', res.split.nTrain, ref[key].split.nTrain, 0);
+    check(key + ' nTest', res.split.nTest, ref[key].split.nTest, 0);
+    check(key + ' lasso alpha', res.tuning.lassoAlpha, ref[key].tuning.lassoAlpha, 1e-7);
+    check(key + ' enet alpha', res.tuning.enetAlpha, ref[key].tuning.enetAlpha, 1e-7);
+
+    for (const algo of Regression.ALGORITHMS) {
+      for (let k = 1; k <= res.maxK; k++) {
+        const got = res.models[algo][k - 1];
+        const want = ref[key].models[algo][k - 1];
+        if (!want) continue;
+        const tag = key + ' ' + algo + ' k=' + k;
+        check(tag + ' features', got.features, want.features);
+        check(tag + ' rmse', got.rmse, want.rmse, 1e-9);
+        check(tag + ' mae', got.mae, want.mae, 1e-9);
+        check(tag + ' r2', got.r2, want.r2, 1e-9);
+        check(tag + ' adj_r2', got.adj_r2, want.adj_r2, 1e-9);
+        check(tag + ' r2_train', got.r2_train, want.r2_train, 1e-9);
+        check(tag + ' f_stat', got.f_stat, want.f_stat, 1e-8);
+        check(tag + ' f_pvalue', got.f_pvalue, want.f_pvalue, 1e-4);
+        check(tag + ' n coefs', got.coefficients.length, want.coefficients.length, 0);
+        for (let i = 0; i < want.coefficients.length; i++) {
+          const a = got.coefficients[i], b = want.coefficients[i];
+          check(tag + ' coef[' + i + '].feature', a.feature, b.feature);
+          check(tag + ' coef[' + i + '].coef', a.coef, b.coef, 1e-8);
+          check(tag + ' coef[' + i + '].stderr', a.stderr, b.stderr, 1e-8);
+          check(tag + ' coef[' + i + '].tstat', a.tstat, b.tstat, 1e-8);
+          check(tag + ' coef[' + i + '].pvalue', a.pvalue, b.pvalue, 1e-4);
+          check(tag + ' coef[' + i + '].ci_lower', a.ci_lower, b.ci_lower, 1e-8);
+          check(tag + ' coef[' + i + '].ci_upper', a.ci_upper, b.ci_upper, 1e-8);
+          if (b.vif === null) check(tag + ' coef[' + i + '].vif null', a.vif, null);
+          else check(tag + ' coef[' + i + '].vif', a.vif, b.vif, 1e-7);
+        }
+        for (let i = 0; i < want.outliers.length; i++) {
+          const a = got.outliers[i], b = want.outliers[i];
+          check(tag + ' outlier[' + i + '].index', a.index, b.index, 0);
+          check(tag + ' outlier[' + i + '].residual', a.residual, b.residual, 1e-8);
+          check(tag + ' outlier[' + i + '].pct_error', a.pct_error, b.pct_error, 1e-8);
+        }
+      }
+    }
+    log(key + ' sweet spot: ' + JSON.stringify(res.bestGlobal));
+  }
+
+  log('');
+  log(fails === 0 ? 'ALL CHECKS PASSED' : fails + ' CHECK(S) FAILED');
+  document.getElementById('out').textContent = lines.join('\n');
+  window.__done = true;
+  window.__fails = fails;
+}
+main().catch((e) => {
+  const detail = e && e.message && e.message.indexOf('Missing fixture') === 0 ? e.message : (e && e.stack) || e;
+  document.getElementById('out').textContent = lines.join('\n') + '\n\n' + detail;
+  window.__done = true;
+  window.__fails = -1;
+});
+</script>
+</body>
+</html>
