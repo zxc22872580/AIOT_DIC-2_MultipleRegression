@@ -1,3 +1,6 @@
+<img width="1882" height="862" alt="image" src="https://github.com/user-attachments/assets/10b81a48-e7f5-45d2-a6ca-c8f1d71d9edc" />
+<img width="1867" height="860" alt="image" src="https://github.com/user-attachments/assets/3e0fb0b9-cd28-4a78-b940-bb9da8fbac88" />
+
 # 📈 Multiple Regression Explorer
 
 > Feature selection and parsimony analysis for multiple linear regression — five selection
